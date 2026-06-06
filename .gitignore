@@ -1,0 +1,36 @@
+# Maven build output
+target/
+*.class
+
+# Secretos y configuración local — NUNCA al repositorio
+.env
+application-local.yml
+application-local.yaml
+*.local.yml
+*.local.yaml
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse / STS
+.classpath
+.project
+.settings/
+bin/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code local tooling
+.claude/

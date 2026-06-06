@@ -1,0 +1,17 @@
+# Perfil "backtest": desactiva todo lo que requiere base de datos o red a Binance
+# autenticado. Solo el CommandLineRunner de BacktestRunner se ejecuta.
+spring:
+  main:
+    web-application-type: none   # no necesitamos servidor HTTP en el backtest
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+
+# El endpoint público de Binance no requiere API key; se sobreescribe la URL
+# para apuntar a mainnet (donde están los datos históricos reales).
+bot:
+  binance:
+    base-url: https://api.binance.com
+    testnet: false

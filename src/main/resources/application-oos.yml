@@ -1,0 +1,11 @@
+# Perfil "oos": validación out-of-sample. Sin BD, sin servidor web, sin claves.
+# Mantiene interval=1h (del documento base) — la testnet no aplica aquí porque
+# HistoricalDataLoader siempre descarga del endpoint público de mainnet.
+spring:
+  main:
+    web-application-type: none
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration

@@ -1,0 +1,123 @@
+spring:
+  application:
+    name: trading-bot
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tradingbot
+    username: ${DB_USER:tradingbot}
+    password: ${DB_PASSWORD:changeme}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+bot:
+  binance:
+    # Las claves vienen del entorno. Por defecto, claves de TESTNET.
+    api-key: ${BINANCE_API_KEY:}
+    api-secret: ${BINANCE_API_SECRET:}
+    base-url: ${BINANCE_BASE_URL:https://testnet.binance.vision}
+    testnet: ${BINANCE_TESTNET:true}
+  trading:
+    symbol: BTCUSDT
+    interval: 1h
+    # Debe ser >= trend-period + 10 para que todos los indicadores tengan datos con margen.
+    # Con trend-period=200 necesitamos al menos 210 velas. Se usa 250 como margen cómodo.
+    candle-limit: 250
+    fast-period: 20
+    slow-period: 50
+    # Filtro de tendencia: SMA de largo plazo. 0 = desactivado.
+    # Con trend-period=200, las señales BUY solo se permiten si precio > SMA(200).
+    trend-period: 200
+    # Filtro de FUERZA de tendencia (ADX). adx-period=0 desactiva el filtro.
+    # Solo se permite BUY si ADX >= adx-threshold (25 = "hay tendencia", clásico de Wilder).
+    adx-period: 14
+    adx-threshold: 25
+  risk:
+    # Tamaño máximo por operación, en USDT. Empieza pequeño.
+    max-position-quote: 10.0
+    stop-loss-percent: 2.0
+    max-daily-loss-quote: 5.0
+    # ARRANCA EN TRUE: el bot no operará hasta que tú lo desactives a conciencia.
+    kill-switch: false
+
+# El ciclo de decisión se ejecuta cada minuto (ajustable).
+bot-scheduler:
+  fixed-delay-ms: 60000
+
+# Configuración del módulo de backtesting (perfiles: backtest / backtest-multi)
+backtest:
+  initial-capital: 1000       # capital inicial en USDT
+  total-candles: 2000         # usado por el backtest simple (perfil: backtest)
+  commission-pct: 0.1         # 0.1% por operación (Binance spot maker/taker estándar)
+  slippage-pct: 0.05          # 0.05% de slippage estimado por ejecución
+
+  # Periodos para el análisis multi-régimen (perfil: backtest-multi).
+  # Fechas en formato ISO YYYY-MM-DD (UTC medianoche en start, 23:59:59 en end).
+  # Basados en regímenes reales documentados de BTCUSDT en Binance:
+  periods:
+    - name: "ALCISTA (Oct23-Mar24)"
+      # BTC: ~$27 000 → ~$73 000 ATH. Bull run por aprobación ETF spot + halving.
+      start-date: "2023-10-01"
+      end-date:   "2024-03-14"
+
+    - name: "BAJISTA (Ene22-Jun22)"
+      # BTC: ~$47 000 → ~$19 000 (-60%). Primer semestre del bear market 2022.
+      start-date: "2022-01-01"
+      end-date:   "2022-06-30"
+
+    - name: "LATERAL (May23-Sep23)"
+      # BTC: rango $25 000-$32 000 durante ~5 meses sin tendencia clara.
+      start-date: "2023-05-01"
+      end-date:   "2023-09-30"
+
+---
+# ======================================================================
+# Perfil "testnet"
+# Activa con: --spring.profiles.active=testnet
+#
+# Sobreescribe SOLO los parámetros de trading. NO toca la base de datos:
+# usa la PostgreSQL configurada arriba (con DB_USER / DB_PASSWORD).
+# Esto garantiza que la posición abierta persiste entre reinicios.
+#
+# Kill-switch: se lee del documento base (arriba).
+#   kill-switch: true  → solo observación, sin órdenes
+#   kill-switch: false → ejecución real en testnet (saldo ficticio)
+#
+# Historial en testnet:
+#   interval=1h → ~53-71 velas (INSUFICIENTE para SMA200 → DATOS INSUFICIENTES)
+#   interval=1m → ~200-1000 velas (SUFICIENTE para SMA200)
+# ======================================================================
+spring:
+  config:
+    activate:
+      on-profile: testnet
+
+bot:
+  trading:
+    interval: 1m        # 1m tiene suficiente historial en testnet para SMA200
+    candle-limit: 250   # > trend-period(200); si testnet da menos, la guardia lo detecta
+
+bot-scheduler:
+  fixed-delay-ms: 30000  # ciclo cada 30 s para feedback rápido
+
+---
+# ======================================================================
+# Perfil "testnet-demo"
+# Activa con: --spring.profiles.active=testnet,testnet-demo
+#
+# Añade H2 en memoria sobre los parámetros del perfil testnet.
+# Útil para observación cuando NO tienes PostgreSQL disponible.
+# ADVERTENCIA: el estado de posición se pierde al reiniciar.
+# ======================================================================
+spring:
+  config:
+    activate:
+      on-profile: testnet-demo
+  datasource:
+    url: jdbc:h2:mem:tradingbot;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
