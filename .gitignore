@@ -34,3 +34,6 @@ Thumbs.db
 
 # Claude Code local tooling
 .claude/
+
+# Lanzador local (no publicar)
+run-real.ps1
