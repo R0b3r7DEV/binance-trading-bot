@@ -7,6 +7,18 @@
 
 *[Versión en español más abajo / Spanish version below](#trading-bot--sistema-de-trading-algorítmico-con-validación-empírica-de-estrategia)*
 
+<p>
+  <img alt="Java" src="https://img.shields.io/badge/Java_21-ED8B00?style=flat&logo=openjdk&logoColor=white" />
+  <img alt="Spring Boot" src="https://img.shields.io/badge/Spring_Boot_3.4-6DB33F?style=flat&logo=springboot&logoColor=white" />
+  <img alt="Spring Data JPA" src="https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat&logo=spring&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white" />
+  <img alt="Maven" src="https://img.shields.io/badge/Maven-C71A36?style=flat&logo=apachemaven&logoColor=white" />
+  <img alt="Binance" src="https://img.shields.io/badge/Binance_Spot_API-F0B90B?style=flat&logo=binance&logoColor=black" />
+  <img alt="License MIT" src="https://img.shields.io/badge/License-MIT-blue?style=flat" />
+</p>
+
+<!-- TODO: screenshot — out-of-sample backtest console output / results table -->
+
 ---
 
 ## 🇬🇧 English
@@ -71,6 +83,21 @@ The implemented strategy is a **moving-average crossover with trend filters**:
 - A long-term SMA (200) acts as a trend filter — longs are only allowed in an uptrend.
 - An optional **ADX** filter restricts entries to periods of genuine trend strength,
   designed to avoid the false signals that plague crossover systems in sideways markets.
+
+### Project structure
+
+```
+src/main/java/com/xpl0day/bot/
+├── marketdata/     # Candle model + MarketDataService (Binance klines)
+├── strategy/       # StrategyService, trend/ADX-filtered variants, Signal, indicators/Adx
+├── risk/           # RiskManager (kill-switch, daily loss limit, position sizing)
+├── execution/      # ExecutionService (market orders)
+├── state/          # Position, PositionRepository, StateManager (JPA persistence)
+├── scheduler/      # TradingScheduler (fixed-interval decision cycle)
+├── backtest/       # BacktestEngine, MultiPeriodRunner, OutOfSampleEngine, RegimeClassifier
+└── config/         # BinanceClientConfig, BotProperties
+src/main/resources/ # application.yml + backtest / multi-period / out-of-sample profiles
+```
 
 ### Research & Findings
 
